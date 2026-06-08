@@ -35,12 +35,12 @@ CLIENTS = [
         "name":      "Mehul Kumawat",
         "locations": ["Jaipur Rajasthan", "Jodhpur Rajasthan"],
         "category":  "restaurant",
-        "email":     "mehulkumawat0221@gmail.com",
+        "email":     os.getenv("mehulkumawat0221@gmail.com"),  # sends to yourself by default
     },
     # Add more clients below:
     # {
     #     "name":      "Client B",
-    #     "locations": ["Bandra Mumbai"],
+    #     "locations": ["Udaipur Rajasthan", "Kota Rajasthan"],
     #     "category":  "cafe",
     #     "email":     "clientb@example.com",
     # },
@@ -87,7 +87,7 @@ def load_seen_ids(client_name: str) -> set:
 
 def save_to_database(client_name: str, info: dict):
     """Append a new business to the permanent database CSV."""
-    db_path    = get_db_path(client_name)
+    db_path      = get_db_path(client_name)
     write_header = not db_path.exists()
     with open(db_path, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=DB_HEADERS)
@@ -128,6 +128,7 @@ def search_places(location: str, category: str) -> list[dict]:
     """
     Search Google Maps via SerpAPI.
     Free plan: 100 searches/month — no card needed.
+    Docs: https://serpapi.com/google-maps-api
     """
     url    = "https://serpapi.com/search"
     params = {
@@ -165,6 +166,7 @@ def search_places(location: str, category: str) -> list[dict]:
 
 
 def extract_info(place: dict, location: str, category: str) -> dict:
+    """Extract the fields we care about from a SerpAPI result."""
     return {
         "place_id": place.get("place_id") or place.get("data_id", ""),
         "name":     place.get("title", "Unknown"),
@@ -262,6 +264,7 @@ def send_telegram(message: str):
 
 
 def build_alert(client_name: str, businesses: list[dict]) -> str:
+    """Build the alert message for email and Telegram."""
     today = datetime.now().strftime("%d %b %Y")
     if not businesses:
         return f"*{client_name}* — {today}\nNo new businesses found today."
